@@ -1,7 +1,7 @@
 const initNode = require('./modules/init-node.js');
+const Storage = require('./modules/p2p/storage.js');
 const setupSwarm = require('./modules/p2p/swarm.js');
 const setupSwarmRPC = require('./modules/p2p/swarm-rpc.js');
-const setupStoreAndDB = require('./modules/p2p/storage.js');
 const {generateEd25519KeyPair} = require('./modules/crypt.js');
 
 async function main() {
@@ -9,19 +9,24 @@ async function main() {
     
     const pvtKey = cmdOpts.pvtKey;
     
+    const rmtCoreFeedPubKey = cmdOpts.rmtCoreFeedPubKey;
+    
     // const rpcTopic = env.rpcTopic;
     const swarmTopic = env.swarmTopic;
     
     const keyPair = generateEd25519KeyPair(pvtKey);
 
+
     const coreStorePath = env.coreStorePath + '/' + keyPair.publicKey.toString('hex');
     
-    const base = await setupStoreAndDB(coreStorePath);
+    const storage = new Storage(coreStorePath, rmtCoreFeedPubKey)
 
-    const rpc = await setupSwarmRPC(keyPair.publicKey, base.db);
+    await storage.setup();
+
+    const rpc = await setupSwarmRPC(keyPair.publicKey, storage);
 
     const swarm = await setupSwarm(keyPair, swarmTopic, cmdOpts, { 
-        store: base.store 
+        store: storage.store 
     });
 }
 

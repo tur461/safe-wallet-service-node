@@ -1,6 +1,6 @@
 const Swarm = require('hyperswarm');
 const { createHash } = require('crypto');
-const { handleSwarmSocketData, setupCustomEventListenersForSwarm } = require('./swarm-helpers.js');
+const { setupCustomEventListenersForSwarm } = require('./swarm-helpers.js');
 
 async function setupSwarm(keyPair, topic, opts, extra) {
     const swarm = new Swarm({
@@ -31,19 +31,16 @@ async function setupSwarm(keyPair, topic, opts, extra) {
 
 function setupSwarmListeners(swarm, extra) {
     swarm.on('connection', (sock, info) => {
-        console.log('New connection!', info.publicKey.toString('hex').slice(0, 6));
-        extra.store.replicate(sock);
-        sock.write('Hello from my swarm node!');
+        console.log('New connection!', info.publicKey.toString('hex').slice(0, 6), ' is INIT:', info.client);
+        
+        const replicationStream = extra.store.replicate(info.client);
 
+        sock.pipe(replicationStream).pipe(sock);
         
         setupCustomEventListenersForSwarm(sock);
         
-        sock.on('data', buf => handleSwarmSocketData(buf));
-
-        sock.on('connect', () => console.log('Handshake complete!'));
         sock.on('close', () => console.log('Stream closed'));
         sock.on('error', err => console.error('Error:', err));
-        sock.on('message', buf => console.log('Message received size:', buf.length));
     });
 }
 

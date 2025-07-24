@@ -10,3 +10,6 @@ coverage/
 *.env
 *.tmp
 *.cache
+coreStore
+coreStore/
+coreStore/**

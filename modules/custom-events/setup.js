@@ -1,4 +1,5 @@
 const { EventEmitter } = require('events')
+const {EventType} = require('./constants.js');
 
 const emitter = new EventEmitter()
 
@@ -11,6 +12,19 @@ const CustomEvent = {
     }
 }
 
+
+function mapKeyToEventType(key) {
+    if(key.toLowerCase().indexOf('propose') > -1)
+        return EventType.PROPOSE_TXN
+    if(key.toLowerCase().indexOf('sign') > -1)
+        return EventType.SIGN_TXN
+    
+    if(key.toLowerCase().indexOf('execute') > -1)
+        return EventType.EXECUTE_TXN
+    return EventType.INVALID;
+}
+
 module.exports = {
     CustomEvent,
+    mapKeyToEventType
 }
