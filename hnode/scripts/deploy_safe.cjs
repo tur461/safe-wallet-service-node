@@ -127,7 +127,7 @@ safe_web_authn_signer_factory: \`${safeWebAuthnSignerFactory.address}\`
       transport: http('http://localhost:8545'),
       account: deployer.account,  // ensure deployer.account, not deployer.address
   });
-
+  walletClient.key = 'passkeyWallet'
   // console.log("Provider:", provider);
 
   const chainId = await provider.getChainId()
