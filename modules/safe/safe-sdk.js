@@ -37,6 +37,7 @@ class SafeSDK {
         }
         if(this.owners.length == this.ownersTotal) return false;
         this.owners.push(owner)
+        ++this.thresholdCounter;
         return true;
     }
 
