@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "commander": "^14.0.0"
+    "commander": "^14.0.0",
+    "crypto": "^1.0.1",
+    "hyperswarm": "^4.12.1"
   }
 }
