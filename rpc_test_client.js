@@ -16,4 +16,5 @@ if (process.argv.length < 4) {
     // Make an RPC request
     const response = await client.request(method, Buffer.from(message));
     console.log(`RPC "${method}" response:`, response.toString());
+    process.exit(0)
 })();

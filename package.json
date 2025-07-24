@@ -11,12 +11,15 @@
   "license": "ISC",
   "dependencies": {
     "@hyperswarm/rpc": "^3.3.2",
+    "@safe-global/protocol-kit": "^6.1.0",
     "commander": "^14.0.0",
     "corestore": "^7.4.5",
     "crypto": "^1.0.1",
     "dotenv": "^17.2.0",
+    "ethers": "^6.15.0",
     "hyperbee": "^2.24.3",
     "hypercore-crypto": "^3.6.1",
-    "hyperswarm": "^4.12.1"
+    "hyperswarm": "^4.12.1",
+    "viem": "^2.33.0"
   }
 }
