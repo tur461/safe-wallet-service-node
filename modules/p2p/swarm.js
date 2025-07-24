@@ -1,6 +1,6 @@
 const Swarm = require('hyperswarm');
 const { createHash } = require('crypto');
-const { setupCustomEventListenersForSwarm } = require('./swarm-helpers.js');
+const { handleSwarmSocketData, setupCustomEventListenersForSwarm } = require('./swarm-helpers.js');
 
 async function setupSwarm(keyPair, topic, opts, extra) {
     const swarm = new Swarm({
