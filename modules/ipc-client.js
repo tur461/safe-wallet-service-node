@@ -10,8 +10,8 @@ class IpcEnclaveClient {
         return this.send(IPC.CMD.GEN_SEED, IPC.TYPE.SECP256K1, IPC.SAMPLE_SEED_HEX_DATA);
     }
 
-    enclaveSignData(hexData) {
-        return this.send(IPC.CMD.SIGN, IPC.TYPE.SECP256K1, hexData)
+    enclaveSignData(hexString) {
+        return this.send(IPC.CMD.SIGN, IPC.TYPE.SECP256K1, hexString)
     }
 
     send(command, type, hexData) {
