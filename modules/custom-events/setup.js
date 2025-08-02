@@ -7,6 +7,9 @@ const CustomEvent = {
     on: (eventName, listener) => {
         emitter.on(eventName, listener)
     },
+    off: (eventName, listener) => {
+        emitter.off(eventName, listener)
+    },
     emit: (eventName, ...args) => {
         emitter.emit(eventName, ...args)
     }

@@ -35,9 +35,11 @@ class RpcServer {
                 console.log('proposal:', data);
                 
                 CustomEvent.emit(EventType.PROPOSE_TXN, data);
-                
+                console.log('proposal emitted');
                 return Buffer.from('OK!');
-            } catch {}
+            } catch (e) {
+                console.error(e);
+            }
         
             return Buffer.from('FAIL!');
         });
@@ -52,7 +54,9 @@ class RpcServer {
                 const status = this.safe.getStatus(data.txnHash);
                 
                 return Buffer.from(status);
-            } catch {}
+            } catch (e) {
+                console.error(e);
+            }
         
             return Buffer.from('FAIL!');
         });
@@ -67,7 +71,9 @@ class RpcServer {
                 const sigsStr = this.safe.getSignaturesJoined(data.txnHash, data.sep || DEFAULT_SIGN_SEPARATOR);
                 
                 return Buffer.from(sigsStr);
-            } catch {}
+            } catch (e) {
+                console.error(e);
+            }
         
             return Buffer.from('FAIL!');
         });

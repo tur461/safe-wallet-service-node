@@ -49,7 +49,8 @@ class Storage {
 
             console.log('[remoteFeed] discoveryKey:', this.remoteFeed.discoveryKey.toString('hex'))
             
-            this.remoteFeed.on('peer-add', () => console.log('Connected to a peer for remote feed'));
+            this.remoteFeed.on(STORE_EVENT_TYPE.CONNECT, () => console.log('Connected to a peer for remote feed'));
+            
             this.remoteFeed.on(STORE_EVENT_TYPE.DOWNLOAD, (index) => {
                 console.log('[remoteFeed] Download detected, starting live read stream');
                 this.setupDBStream(this.remoteDB);

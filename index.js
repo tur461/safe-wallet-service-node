@@ -13,6 +13,7 @@ async function main() {
     const cmdArgs = new CmdArgs()
     
     const rmtCoreFeedPubKey = cmdArgs.rmtCoreFeedPubKey;
+    console.log('rmtCoreFeedPubKey:', rmtCoreFeedPubKey);
     
     const swarmTopic = env.swarmTopic;
 
@@ -37,6 +38,7 @@ async function main() {
     const safe = new SafeSDK({
         pubKey, // used as node_id
         ipc,
+        db: storage,
         url: providerUrl,
         threshold: 2,
         ownersTotal: 3,

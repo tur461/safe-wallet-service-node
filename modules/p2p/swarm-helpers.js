@@ -45,10 +45,10 @@ const setupCustomEventListenersForSwarm = _ => {
 
     
     
-    CustomEvent.on(EventType.PROPOSE_TXN, (txn) => {
-        console.log('New transaction event received:', txn);
-        handleIncomingData(txn);
-    });
+    // CustomEvent.on(EventType.PROPOSE_TXN, (txn) => {
+    //     console.log('New transaction event received:', txn);
+    //     handleIncomingData(txn);
+    // });
     
     // CustomEvent.on(EventType.STREAM, (data) => {
     //     console.log('New stream event received:', data);

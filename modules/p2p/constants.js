@@ -8,6 +8,7 @@ const STORE_EVENT_TYPE = {
     DOWNLOAD: 'download',
     DATA: 'data',
     FEED: 'feed',
+    CONNECT: 'peer-add',
 }
 
 const RPC_POINTS = {

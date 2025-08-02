@@ -75,11 +75,14 @@ class SafeSign {
     }
 
     listenEvents() {
-        CustomEvent.on(EventType.PROPOSE_TXN, this.handleProposed)
+        CustomEvent.off(EventType.PROPOSE_TXN, data => this.handleProposed(data))
+        CustomEvent.on(EventType.PROPOSE_TXN, data => this.handleProposed(data))
 
-        CustomEvent.on(EventType.SIGNED, this.handleSigned)
+        CustomEvent.off(EventType.SIGNED, data => this.handleSigned(data))
+        CustomEvent.on(EventType.SIGNED, data => this.handleSigned(data))
 
-        CustomEvent.on(EventType.STREAM, this.handleSigningFromRemoteFeeder);
+        CustomEvent.off(EventType.STREAM, data => this.handleSigningFromRemoteFeeder(data));
+        CustomEvent.on(EventType.STREAM, data => this.handleSigningFromRemoteFeeder(data));
     }
 
     reset() {
@@ -131,18 +134,19 @@ class SafeSign {
         this.signatureMapRemote.set(txnHash, [...sigList]);
     }
 
-    storeInHyperDb(key, value) {
-        this.db.put(key, value);
+    async storeInHyperDb(key, value) {
+        await this.db.put(key, value);
     }
 
     async signTxn(txnData) {
         const txnHash = txnData.txnHash;
         // to hex
-        const hexData = Buffer.from(txnData.data).toString('hex');
+        // const hexData = Buffer.from(txnData.data).toString('hex');
         // add logic to start the signing process
-        const signature = await this.signViaEnclave(hexData)
+        const signature = await this.signViaEnclave(txnHash);
+        console.log('[signTxn] signature:', signature);
 
-        this.storeInHyperDb(txnHash, {
+        await this.storeInHyperDb(txnHash, {
             signature,
             node_id: this.node_id,
             type: DATA_TYPE.SIGNATURE,

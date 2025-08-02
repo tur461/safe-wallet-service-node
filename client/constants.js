@@ -31,8 +31,16 @@ const ACTION = {
     RETRIEVE: 'retrieve_signatures',
 }
 
+const RPC_POINTS = {
+    ECHO: 'echo',
+    SIGN_STATUS: 'sign_status',
+    PROPOSE: 'propose',
+    SIGS_RETRIEVE: 'sigs_retrieve',
+}
+
 module.exports = {
     ABI,
     ADDR,
     ACTION,
+    RPC_POINTS,
 }
