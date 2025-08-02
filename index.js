@@ -12,8 +12,6 @@ async function main() {
 
     const cmdArgs = new CmdArgs()
     
-    const pvtKey = cmdArgs.pvtKey;
-    
     const rmtCoreFeedPubKey = cmdArgs.rmtCoreFeedPubKey;
     
     const swarmTopic = env.swarmTopic;
@@ -26,7 +24,7 @@ async function main() {
 
     const krypt = new Krypt(ipc);
     
-    const keyPair = await krypt.generateEd25519KeyPair(pvtKey);
+    const keyPair = await krypt.generateEd25519KeyPair();
 
     const pubKey = keyPair.publicKey.toString('hex');
 

@@ -6,6 +6,10 @@ class IpcEnclaveClient {
         this.socketPath = socketPath;
     }
 
+    enclaveGenerateSeed() {
+        return this.send(IPC.CMD.GEN_SEED, IPC.TYPE.SECP256K1, IPC.SAMPLE_SEED_HEX_DATA);
+    }
+
     enclaveSignData(hexData) {
         return this.send(IPC.CMD.SIGN, IPC.TYPE.SECP256K1, hexData)
     }
@@ -14,6 +18,7 @@ class IpcEnclaveClient {
         return new Promise((resolve, reject) => {
             const client = net.createConnection(this.socketPath, () => {
                 const msg = `${command} ${type} ${hexData}`;
+                console.log('IPC:', msg);
                 client.write(msg);
             });
 
