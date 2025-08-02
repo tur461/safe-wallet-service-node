@@ -1,6 +1,6 @@
 const Storage = require('./modules/p2p/storage.js');
 const SwarmSetup = require('./modules/p2p/swarm.js');
-const setupSwarmRPC = require('./modules/p2p/swarm-rpc.js');
+const RpcServer = require('./modules/p2p/swarm-rpc.js');
 const Krypt = require('./modules/krypt.js');
 const IpcEnclaveClient = require('./modules/ipc-client.js');
 const SafeSDK = require('./modules/safe/safe-signing.js');
@@ -37,14 +37,16 @@ async function main() {
     await storage.setup();
 
     const safe = new SafeSDK({
-        pubKey,
+        pubKey, // used as node_id
         ipc,
         url: providerUrl,
         threshold: 2,
         ownersTotal: 3,
     });
 
-    const rpc = await setupSwarmRPC(keyPair.publicKey, storage);
+    const rpcServer = new RpcServer(storage, safe);
+    
+    await rpcServer.setup(keyPair.publicKey);
 
     const ssObj = new SwarmSetup();
     

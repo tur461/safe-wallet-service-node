@@ -2,6 +2,7 @@ const Corestore = require('corestore');
 const Hyperbee = require('hyperbee');
 const { CustomEvent } = require('../custom-events/setup.js');
 const { EventType } = require('../custom-events/constants');
+const { STORE_EVENT_TYPE } = require('./constants.js');
 
 class Storage {
     constructor(path, key) {
@@ -19,7 +20,7 @@ class Storage {
         this.store = new Corestore(this.coreStorePath);
         await this.store.ready();
 
-        this.store.on('feed', (feed) => {
+        this.store.on(STORE_EVENT_TYPE.FEED, (feed) => {
             console.log('Replicating feed:', feed.key.toString('hex'));
         });
         // Always create/open a writable feed for this node
@@ -49,7 +50,7 @@ class Storage {
             console.log('[remoteFeed] discoveryKey:', this.remoteFeed.discoveryKey.toString('hex'))
             
             this.remoteFeed.on('peer-add', () => console.log('Connected to a peer for remote feed'));
-            this.remoteFeed.on('download', (index) => {
+            this.remoteFeed.on(STORE_EVENT_TYPE.DOWNLOAD, (index) => {
                 console.log('[remoteFeed] Download detected, starting live read stream');
                 this.setupDBStream(this.remoteDB);
                 console.log('Downloaded block:', index)
@@ -60,7 +61,7 @@ class Storage {
     setupDBStream(dbInstance) {
         this.stream = dbInstance.createReadStream(null, { live: true });
         
-        this.stream.on('data', (data) => {
+        this.stream.on(STORE_EVENT_TYPE.DATA, (data) => {
             console.log('[DBStream] New data:', data.key, data.value);
             // listened in swarm-helper.js
             CustomEvent.emit(EventType.STREAM, data);

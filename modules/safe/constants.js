@@ -13,16 +13,16 @@ const ADDR = {
 }
 
 const ABI = {
-    SAFE_SINGLETON: require('./abis/Safe.json'),
-    SAFE_PROXY_FACTORY: require('./abis/SafeProxyFactory.json'),
-    MULTI_SEND: require('./abis/MultiSend.json'),
-    MULTI_SEND_CALL_ONLY: require('./abis/MultiSendCallOnly.json'),
-    FALLBACK_HANDLER: require('./abis/CompatibilityFallbackHandler.json'),
-    SIGN_MESSAGE_LIB: require('./abis/SignMessageLib.json'),
-    CREATE_CALL: require('./abis/CreateCall.json'),
-    SIMULATE_TX_ACCESSOR: require('./abis/SimulateTxAccessor.json'),
-    SAFE_WEB_AUTHN_SIGNER_FACTORY: require('./abis/SafeWebAuthnSignerFactory.json'),
-    SAFE_WEB_AUTHN_SHARED_SIGNER: require('./abis/SafeWebAuthnSharedSigner.json'),
+    // SAFE_SINGLETON: require('./abis/Safe.json'),
+    // SAFE_PROXY_FACTORY: require('./abis/SafeProxyFactory.json'),
+    // MULTI_SEND: require('./abis/MultiSend.json'),
+    // MULTI_SEND_CALL_ONLY: require('./abis/MultiSendCallOnly.json'),
+    // FALLBACK_HANDLER: require('./abis/CompatibilityFallbackHandler.json'),
+    // SIGN_MESSAGE_LIB: require('./abis/SignMessageLib.json'),
+    // CREATE_CALL: require('./abis/CreateCall.json'),
+    // SIMULATE_TX_ACCESSOR: require('./abis/SimulateTxAccessor.json'),
+    // SAFE_WEB_AUTHN_SIGNER_FACTORY: require('./abis/SafeWebAuthnSignerFactory.json'),
+    // SAFE_WEB_AUTHN_SHARED_SIGNER: require('./abis/SafeWebAuthnSharedSigner.json'),
 }
 
 

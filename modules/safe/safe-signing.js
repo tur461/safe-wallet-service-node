@@ -23,7 +23,8 @@ class SafeSign {
         this.signingStatusMap = new Map();
         
         this.txnProposalMap = new Map();
-        this.signaturePartsMap = new Map();
+        this.signatureMapLocal = new Map();
+        this.signatureMapRemote = new Map();
         this.txnUnderSigningMap = new Map();
         this.thresholdAchievedMap = new Map();
 
@@ -35,14 +36,50 @@ class SafeSign {
     }
 
     handleProposed(txData) {
-        this.addProposal(txData, txData.txnHash)
-        this.signTxn(txData);
+        if(!this.hasAchievedThreshold(txData.txnHash)) {
+            this.addProposal(txData, txData.txnHash)
+            this.signTxn(txData);
+            this.incSignCountFor(txData.txnHash);
+        } else {
+            console.log('threshold already achieved for txnHash:', txData.txnHash);
+            
+            // event not handled anywhere
+            // let other nodes know about this by storing and replicating
+            CustomEvent.emit(EventType.THRESHOLD_ACHIEVED, txnHash);
+        }
+    }
+
+    hasAchievedThreshold(txnHash) {
+        return this.thresholdAchievedMap.get(txnHash);
+    }
+
+    hasSignedLocal(txnHash) {
+        return this.signatureMapLocal.has(txnHash);
+    }
+
+    handleSigningFromRemoteFeeder(txData) {
+        console.log('[handleSigningFromRemoteFeeder] data:', txData);
+        // check if we have already signed the txnHash
+        if(this.hasSignedLocal(txData.key)) {
+            console.log('this node has already signed the txn:', txData.key);
+            // add the incoming to signatureMapRemote
+            this.addSignatureRemote(txData.value.signature, txData.key);
+            this.incSignCountFor(txData.key);
+        } else {
+            // if not then lets sign it
+            this.handleProposed({
+                txnHash: txData.key,
+                data: txData.value.data
+            });
+        }
     }
 
     listenEvents() {
         CustomEvent.on(EventType.PROPOSE_TXN, this.handleProposed)
 
         CustomEvent.on(EventType.SIGNED, this.handleSigned)
+
+        CustomEvent.on(EventType.STREAM, this.handleSigningFromRemoteFeeder);
     }
 
     reset() {
@@ -66,6 +103,8 @@ class SafeSign {
             this.signingStatusMap.set(txnHash, SIGN_STATUS.COMPLETED);
 
             // emit an event to notify other parts of the service node
+            // event not handled anywhere
+            // we can store and replicate to other nodes
             CustomEvent.emit(EventType.THRESHOLD_ACHIEVED, txnHash);
         }
 
@@ -79,12 +118,17 @@ class SafeSign {
     }
 
     // maybe coming from other nodes
-    addSignature(sig, txnHash) {
-        console.log('[addSignature]');
+    addSignatureLocal(sig, txnHash) {
+        console.log('[addSignatureLocal]');
+        if(this.signatureMapLocal.has(txnHash)) return;
+        this.signatureMapLocal.set(txnHash, sig);
+    }
+    addSignatureRemote(sig, txnHash) {
+        console.log('[addSignatureRemote]');
 
-        const sigList = this.signaturePartsMap.has(txnHash) ? Array.from(this.signaturePartsMap.get(txnHash)) : [];
+        const sigList = this.signatureMapRemote.has(txnHash) ? Array.from(this.signatureMapRemote.get(txnHash)) : [];
         sigList.push(sig);
-        this.signaturePartsMap.set(txnHash, [...sigList]);
+        this.signatureMapRemote.set(txnHash, [...sigList]);
     }
 
     storeInHyperDb(key, value) {
@@ -104,7 +148,7 @@ class SafeSign {
             type: DATA_TYPE.SIGNATURE,
         });
 
-        this.addSignature(signature, txnHash);
+        this.addSignatureLocal(signature, txnHash);
         this.signingStatusMap.set(txnHash, SIGN_STATUS.SIGNED);
         
     }
@@ -118,8 +162,8 @@ class SafeSign {
         return this.txnProposalMap.get(txnHash)
     }
 
-    getAchievedSignsTotal() {
-        return this.thresholdCounter;
+    getAchievedSignsTotal(txHash) {
+        return this.signCountMap.get(txHash);
     }
 
     // get the current status of multi signing
@@ -130,8 +174,15 @@ class SafeSign {
     }
 
     // will be called eventually by frontend after multisig is completed
-    getFullSignature(txnHash) {
-
+    getSignaturesJoined(txnHash, sep='__') {
+        if(this.hasAchievedThreshold(txnHash)) {
+            const rmtSigList = this.signatureMapRemote.get(txnHash);
+            const lclSig = this.signatureMapLocal.get(txnHash);
+            
+            return [...rmtSigList, lclSig].join(sep);
+        }
+        console.log('no signatures for txnHash:', txnHash);
+        return '';
     }
 
     // this will be removed here and will happen on frontend

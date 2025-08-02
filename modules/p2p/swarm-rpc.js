@@ -1,74 +1,76 @@
 const RPC = require('@hyperswarm/rpc');
 const {CustomEvent} = require('../custom-events/setup.js');
 const { EventType } = require('../custom-events/constants.js');
+const { RPC_POINTS } = require('./constants.js');
 
-async function setupSwarmRPC(seed, storage) {
-    const rpc = new RPC({seed});
-    const server = rpc.createServer();
-    
-    await server.listen();
-    
-    server.respond('echo', req => {
-        console.log('[RPC] echo');
-        return req;
-    });
-    
-    server.respond('propose', req => {
-        console.log('[RPC] propose', req.toString());
 
-        try {
-            const data = JSON.parse(req.toString())
-            console.log('proposal:', data);
-            
-            // storage.put('propose_' + Date.now(), data)
-            
-            
-            CustomEvent.emit(EventType.PROPOSE_TXN, data);
-            
-            return Buffer.from('OK!');
-        } catch {}
+class RpcServer {
+    constructor(store, safe) {
+        this.safe = safe;
+        this.store = store;
+        this.server = null;
+    }
 
-        return Buffer.from('FAIL!');
-    });
-    
-    server.respond('sign', req => {
-        console.log('[RPC] sign', req.toString());
+    async setup(seed) {
+        const rpc = new RPC({seed});
+        this.server = rpc.createServer();
+        
+        await this.server.listen();
+        this.setupRpcEndpoints();
+        console.log('RPC server publicKey:', this.server.publicKey.toString('hex'));
+    }
 
-        try {
-            const data = JSON.parse(req.toString())
-            console.log('sign:', data);
+    setupRpcEndpoints() {
+        this.server.respond(RPC_POINTS.ECHO, req => {
+            console.log('[RPC] echo');
+            return req;
+        });
 
-            
-            storage.put('sign_' + Date.now(), data)
-
-            CustomEvent.emit(EventType.SIGN_TXN, data);
-            
-            return Buffer.from('OK!');
-        } catch {}
-
-        return Buffer.from('FAIL!');
-    });
-    
-    server.respond('execute', req => {
-        console.log('[RPC] execute', req.toString());
-
-        try {
-            const data = JSON.parse(req.toString())
-            console.log('execute:', data);
-
-            storage.put('execute_' + Date.now(), data)
-            
-            CustomEvent.emit(EventType.EXECUTE_TXN, data);
-            
-            return Buffer.from('OK!');
-        } catch {}
-
-        return Buffer.from('FAIL!');
-    });
-    
-    console.log('RPC server publicKey:', server.publicKey.toString('hex'));
-    
-    return { rpc, server };
+        this.server.respond(RPC_POINTS.PROPOSE, req => {
+            console.log('[RPC] propose', req.toString());
+        
+            try {
+                const data = JSON.parse(req.toString())
+                console.log('proposal:', data);
+                
+                CustomEvent.emit(EventType.PROPOSE_TXN, data);
+                
+                return Buffer.from('OK!');
+            } catch {}
+        
+            return Buffer.from('FAIL!');
+        });
+        
+        this.server.respond(RPC_POINTS.SIGN_STATUS, req => {
+            console.log('[RPC] sign_status', req.toString());
+        
+            try {
+                const data = JSON.parse(req.toString())
+                console.log('sign_status data parsed:', data);
+        
+                const status = this.safe.getStatus(data.txnHash);
+                
+                return Buffer.from(status);
+            } catch {}
+        
+            return Buffer.from('FAIL!');
+        });
+        
+        this.server.respond(RPC_POINTS.SIGS_RETRIEVE, req => {
+            console.log('[RPC] ' + RPC_POINTS.SIGS_RETRIEVE, req.toString());
+        
+            try {
+                const data = JSON.parse(req.toString())
+                console.log('sign_status data parsed:', data);
+        
+                const sigsStr = this.safe.getSignaturesJoined(data.txnHash);
+                
+                return Buffer.from(sigsStr);
+            } catch {}
+        
+            return Buffer.from('FAIL!');
+        });
+    }
 }
 
-module.exports = setupSwarmRPC
+module.exports = RpcServer;

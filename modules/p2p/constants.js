@@ -4,6 +4,21 @@ const DATA_TYPE = {
 
 }
 
+const STORE_EVENT_TYPE = {
+    DOWNLOAD: 'download',
+    DATA: 'data',
+    FEED: 'feed',
+}
+
+const RPC_POINTS = {
+    ECHO: 'echo',
+    SIGN_STATUS: 'sign_status',
+    PROPOSE: 'propose',
+    SIGS_RETRIEVE: 'sigs_retrieve',
+}
+
 module.exports = {
     DATA_TYPE,
+    RPC_POINTS,
+    STORE_EVENT_TYPE,
 }

@@ -50,12 +50,12 @@ const setupCustomEventListenersForSwarm = _ => {
         handleIncomingData(txn);
     });
     
-    CustomEvent.on(EventType.STREAM, (data) => {
-        console.log('New stream event received:', data);
+    // CustomEvent.on(EventType.STREAM, (data) => {
+    //     console.log('New stream event received:', data);
         
-        handleIncomingData(data);
+    //     handleIncomingData(data);
 
-    });
+    // });
 }
 
 module.exports = {
