@@ -75,7 +75,7 @@ class Storage {
             throw new Error('This feed is read-only on this node');
         }
         await this.db.put(key, val);
-        console.log('Data written to own Hyperbee feed!');
+        console.log('[Storage->put] Data written to own Hyperbee feed!', key, val);
     }
 }
 
