@@ -63,7 +63,7 @@ class Storage {
         this.stream = dbInstance.createReadStream(null, { live: true });
         
         this.stream.on(STORE_EVENT_TYPE.DATA, (data) => {
-            console.log('[DBStream] New data');
+            // console.log('[DBStream] New data');
             // listened in swarm-helper.js
             CustomEvent.emit(EventType.STREAM, data);
         });
@@ -75,7 +75,7 @@ class Storage {
             throw new Error('This feed is read-only on this node');
         }
         await this.db.put(key, val);
-        console.log('[Storage->put] Data written to own Hyperbee feed!', key, val);
+        // console.log('[Storage->put] Data written to own Hyperbee feed!', key, val);
     }
 }
 

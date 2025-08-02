@@ -36,12 +36,12 @@ class SafeSign {
     }
 
     async handleProposed(txData) {
-        if(!this.hasAchievedThreshold(txData.txnHash)) {
-            this.addProposal(txData, txData.txnHash)
+        const txnHash = txData.txnHash;
+        if(!this.hasAchievedThreshold(txnHash)) {
+            this.addProposal(txData, txnHash)
             await this.signTxn(txData);
-            this.incSignCountFor(txData.txnHash);
+            this.incSignCountFor(txnHash);
         } else {
-            console.log('threshold already achieved for txnHash:', txData.txnHash);
             
             // event not handled anywhere
             // let other nodes know about this by storing and replicating
@@ -63,16 +63,13 @@ class SafeSign {
     }
 
     async handleSigningFromRemoteFeeder(txData) {
-        console.log('[handleSigningFromRemoteFeeder] data key:', txData.key, 'node_id:',txData.value.node_id);
         // check if we have already signed the txnHash
         if(this.hasSignedLocal(txData.key)) {
-            console.log('this node has already signed the txn:', txData.key);
             // because the feeder feeds old data as well,
             // we need to check if we have already added
             // the incoming data by checking if signatureMapRemote has it
             const nodeId = txData.value.node_id;
             if(this.hasSignatureRemote_searchByNodeId(txData.key, nodeId)) {
-                console.log('this node has already added the remote signature from node_id:', nodeId);
 
                 return;
             }
@@ -112,9 +109,12 @@ class SafeSign {
     incSignCountFor(txnHash) {
         if(this.thresholdAchievedMap.get(txnHash))
             return -1;
-        const x = this.signCountMap.get(txnHash);
-        this.signCountMap.set(txnHash, parseInt(x) + 1);
+        let x = this.signCountMap.get(txnHash);
+        
+        if(!x) x = 0;
 
+        this.signCountMap.set(txnHash, x + 1);
+        console.log('X:', x, ' TH:', this.threshold);
         if(x+1 >= this.threshold) {
             this.thresholdAchievedMap.set(txnHash, true);
             this.signingStatusMap.set(txnHash, SIGN_STATUS.COMPLETED);
@@ -129,19 +129,16 @@ class SafeSign {
     }
 
     async signViaEnclave(txnHash) {
-        console.log('[signViaEnclave]');
 
         return await this.ipc.enclaveSignData(txnHash)
     }
 
     // maybe coming from other nodes
     addSignatureLocal(sig, txnHash) {
-        console.log('[addSignatureLocal]');
         if(this.signatureMapLocal.has(txnHash)) return;
         this.signatureMapLocal.set(txnHash, sig);
     }
     addSignatureRemote(sigObj, txnHash) {
-        console.log('[addSignatureRemote]');
 
         const sigList = this.signatureMapRemote.has(txnHash) ? Array.from(this.signatureMapRemote.get(txnHash)) : [];
         sigList.push({...sigObj});
@@ -158,7 +155,6 @@ class SafeSign {
         // const hexData = Buffer.from(txnData.data).toString('hex');
         // add logic to start the signing process
         const signature = await this.signViaEnclave(txnHash);
-        console.log('[signTxn] signature:', signature);
 
         await this.storeInHyperDb(txnHash, {
             signature,

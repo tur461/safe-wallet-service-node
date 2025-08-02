@@ -54,7 +54,7 @@ class SwarmSetup {
     
             sock.pipe(replicationStream).pipe(sock);
 
-            console.log('Replication piped stream created');
+            // console.log('Replication piped stream created');
             
             setupCustomEventListenersForSwarm();
 
