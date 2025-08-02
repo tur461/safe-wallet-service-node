@@ -62,6 +62,7 @@ class Storage {
         
         this.stream.on('data', (data) => {
             console.log('[DBStream] New data:', data.key, data.value);
+            // listened in swarm-helper.js
             CustomEvent.emit(EventType.STREAM, data);
         });
 

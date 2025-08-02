@@ -25,17 +25,14 @@ const ABI = {
     SAFE_WEB_AUTHN_SHARED_SIGNER: require('./abis/SafeWebAuthnSharedSigner.json'),
 }
 
-
-const SIGN_STATUS = {
-    NOT_AV: 'unknown/not available',
-    PROPOSED: 'just only proposed',
-    UNDER_SIGNING: 'being multi signed',
-    COMPLETED: 'completed',
+const ACTION = {
+    PROPOSE: 'propose',
+    STATUS: 'status',
+    RETRIEVE: 'retrieve_signatures',
 }
-
 
 module.exports = {
     ABI,
     ADDR,
-    SIGN_STATUS,
+    ACTION,
 }

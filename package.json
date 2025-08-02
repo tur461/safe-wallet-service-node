@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@hyperswarm/rpc": "^3.3.2",
+    "@noble/secp256k1": "^2.3.0",
     "@safe-global/protocol-kit": "^6.1.0",
     "@safe-global/types-kit": "^3.0.0",
     "commander": "^14.0.0",

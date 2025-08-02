@@ -1,7 +1,7 @@
 const { EventType } = require('../custom-events/constants.js');
 const { CustomEvent, mapKeyToEventType } = require('../custom-events/setup.js');
 
-function handleSwarmSocketData(buf) {
+const handleSwarmSocketData = buf => {
     console.log('[handleSwarmSocketData] Data:', buf);
 
     try {
@@ -19,7 +19,7 @@ function handleSwarmSocketData(buf) {
     }
 }
 
-function handleIncomingData(data) {
+const handleIncomingData = data => {
     const evType = mapKeyToEventType(data.key);
     try {
         switch(evType) {
@@ -40,7 +40,7 @@ function handleIncomingData(data) {
     }
 }
 
-function setupCustomEventListenersForSwarm(sock) {
+const setupCustomEventListenersForSwarm = _ => {
     // coming from RPC API
 
     
@@ -59,6 +59,7 @@ function setupCustomEventListenersForSwarm(sock) {
 }
 
 module.exports = {
+    handleIncomingData,
     handleSwarmSocketData,
-    setupCustomEventListenersForSwarm,
-}
+    setupCustomEventListenersForSwarm
+};

@@ -1,4 +1,7 @@
+// https://docs.safe.global/reference-sdk-protocol-kit/transactions/createtransaction
+
 const hre = require("hardhat");
+const { Wallet, utils } = require('ethers');
 const Safe = require('@safe-global/protocol-kit').default;
 const { ethers } = hre;
 const { createWalletClient, createPublicClient, http, fallback } = require("viem");
@@ -120,12 +123,21 @@ async function main() {
   const proxyAddress = proxyCreationEvent ? proxyCreationEvent.args.proxy : receipt.logs[0].address;
 
   console.log("2-of-3 Safe deployed at (i.e. safeAddress):", proxyAddress);
+  
+  // verify
   const safeImpl = await hre.ethers.provider.getStorageAt(proxyAddress, "0x0");
   console.log("Proxy implementation slot:", safeImpl);
-  console.log("gnosisSafeL2:", gnosisSafe.address);
+  console.log("gnosisSafeL2:", gnosisSafeL2.address);
+
   const provider = new hre.ethers.providers.JsonRpcProvider(RPC_URL);
   const { chainId } = await provider.getNetwork();
   
+  const signerKeys = ['0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+    '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+    '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a',
+    '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6',
+  ]
+
   const kits = await getKits({
     compatibilityFallbackHandler,
     createCall,
@@ -141,7 +153,7 @@ async function main() {
     proxyAddress,
     chainId,
 
-  }, threshold);
+  }, threshold, signerKeys);
 
   const safeTransactionData = {
     to: owner3.address,
@@ -162,17 +174,36 @@ async function main() {
 
   // safeTransaction.data.safeTxGas = safeTxGas.toString()
   
-  // const safeTxHash = await kits[0].getTransactionHash(safeTransaction)
-  // console.log('safeTxHash:', safeTxHash);
+  
   // const senderSignature = await kits[0].signHash(safeTxHash)
   // console.log('senderSignature:', senderSignature);
-  
-  const signedTx1 = await kits[0].signTransaction(safeTransaction)
-  console.log('signedTx1 done');
-  const signedTx2 = await kits[1].signTransaction(signedTx1)
-  console.log('signedTx2 done');
 
+  const safeTxHash = await kits[0].getTransactionHash(safeTransaction)
+  console.log("SafeTxHash:", safeTxHash)
   
+  // const signedTx1 = await kits[0].signTransaction(safeTransaction)
+  // console.log('signedTx1 done');
+  // const signedTx2 = await kits[1].signTransaction(signedTx1)
+  // console.log('signedTx2 done');
+  
+  const sig1 = await signWithEnclave(safeTxHash, signerKeys[0])
+  const sig2 = await signWithEnclave(safeTxHash, signerKeys[1])
+  console.log('sig length', sig1.length / 2 - 1)
+
+  safeTransaction.addSignature({
+    signer: deployer.address,
+    data: sig1,
+    staticPart: sig1,
+    dynamicPart: "0x"
+  })
+
+  safeTransaction.addSignature({
+    signer: owner2.address,
+    data: sig2,
+    staticPart: sig2,
+    dynamicPart: "0x"
+  })
+
   // propose (send transaction details to wallet service)
   // await protocolKitOwner1.proposeTransaction({
   //   proxyAddress, // safeAddress
@@ -221,9 +252,11 @@ async function main() {
   const balance = await hre.ethers.provider.getBalance(proxyAddress)
   console.log("Safe balance:", hre.ethers.utils.formatEther(balance))
 
-  const txResponse = await kits[0].executeTransaction(signedTx2)
-  await txResponse.transactionResponse?.wait()
-  console.log("Transaction executed:", txResponse.hash)
+  
+  // const txResponse = await kits[0].executeTransaction(signedTx2)
+  const txResponse = await kits[0].executeTransaction(safeTransaction)
+  await txResponse.transactionResponse.wait()
+  console.log("Transaction executed:", txResponse)
   console.log('completed')
 
 }
@@ -239,12 +272,7 @@ main().catch((error) => {
   process.exitCode = 1;
 });
 
-async function getKits(opts, n) {
-  const signerKeys = ['0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-    '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-    '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a',
-    '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6',
-  ]
+async function getKits(opts, n, signerKeys) {
   const kits = [];
 
   for(let i=0; i<n; ++i) {
@@ -283,4 +311,23 @@ async function getKits(opts, n) {
     kits.push(kit);
   }
   return [...kits];
+}
+
+async function signWithEnclave(safeTxHash, privateKey) {
+  const msgBytes = utils.arrayify(safeTxHash);
+
+  const wallet = new Wallet(privateKey);
+
+  // Sign the digest directly, skipping the EIP-191 prefix
+  const flatSig = wallet._signingKey().signDigest(msgBytes);
+
+  // Normalize v to 27/28
+  const v = flatSig.v >= 27 ? flatSig.v : flatSig.v + 27;
+
+  // Combine r, s, v
+  const r = utils.arrayify(flatSig.r);
+  const s = utils.arrayify(flatSig.s);
+  const fullSignature = new Uint8Array([...r, ...s, v]);
+
+  return "0x" + Buffer.from(fullSignature).toString("hex");
 }

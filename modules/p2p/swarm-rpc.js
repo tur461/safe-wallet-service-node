@@ -20,7 +20,8 @@ async function setupSwarmRPC(seed, storage) {
             const data = JSON.parse(req.toString())
             console.log('proposal:', data);
             
-            storage.put('propose_' + Date.now(), data)
+            // storage.put('propose_' + Date.now(), data)
+            
             
             CustomEvent.emit(EventType.PROPOSE_TXN, data);
             
