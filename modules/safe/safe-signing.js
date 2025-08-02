@@ -35,10 +35,10 @@ class SafeSign {
         this.incSignCountFor(txnHash);
     }
 
-    handleProposed(txData) {
+    async handleProposed(txData) {
         if(!this.hasAchievedThreshold(txData.txnHash)) {
             this.addProposal(txData, txData.txnHash)
-            this.signTxn(txData);
+            await this.signTxn(txData);
             this.incSignCountFor(txData.txnHash);
         } else {
             console.log('threshold already achieved for txnHash:', txData.txnHash);
@@ -57,7 +57,7 @@ class SafeSign {
         return this.signatureMapLocal.has(txnHash);
     }
 
-    handleSigningFromRemoteFeeder(txData) {
+    async handleSigningFromRemoteFeeder(txData) {
         console.log('[handleSigningFromRemoteFeeder] data:', txData);
         // check if we have already signed the txnHash
         if(this.hasSignedLocal(txData.key)) {
@@ -67,7 +67,7 @@ class SafeSign {
             this.incSignCountFor(txData.key);
         } else {
             // if not then lets sign it
-            this.handleProposed({
+            await this.handleProposed({
                 txnHash: txData.key,
                 data: txData.value.data
             });
@@ -75,14 +75,14 @@ class SafeSign {
     }
 
     listenEvents() {
-        CustomEvent.off(EventType.PROPOSE_TXN, data => this.handleProposed(data))
-        CustomEvent.on(EventType.PROPOSE_TXN, data => this.handleProposed(data))
+        CustomEvent.off(EventType.PROPOSE_TXN, async data => await this.handleProposed(data))
+        CustomEvent.on(EventType.PROPOSE_TXN, async data => await this.handleProposed(data))
 
         CustomEvent.off(EventType.SIGNED, data => this.handleSigned(data))
         CustomEvent.on(EventType.SIGNED, data => this.handleSigned(data))
 
-        CustomEvent.off(EventType.STREAM, data => this.handleSigningFromRemoteFeeder(data));
-        CustomEvent.on(EventType.STREAM, data => this.handleSigningFromRemoteFeeder(data));
+        CustomEvent.off(EventType.STREAM, async data => await this.handleSigningFromRemoteFeeder(data));
+        CustomEvent.on(EventType.STREAM, async data => await this.handleSigningFromRemoteFeeder(data));
     }
 
     reset() {
@@ -153,8 +153,7 @@ class SafeSign {
         });
 
         this.addSignatureLocal(signature, txnHash);
-        this.signingStatusMap.set(txnHash, SIGN_STATUS.SIGNED);
-        
+        this.signingStatusMap.set(txnHash, SIGN_STATUS.LOCAL_SIGNED);
     }
 
     addProposal(txn, txnHash) {

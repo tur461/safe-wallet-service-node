@@ -51,7 +51,8 @@ class RpcServer {
                 const data = JSON.parse(req.toString())
                 console.log('sign_status data parsed:', data);
         
-                const status = this.safe.getStatus(data.txnHash);
+                const status = this.safe.getMultisigStatus(data.txnHash);
+                console.log('sign_status status:', status);
                 
                 return Buffer.from(status);
             } catch (e) {

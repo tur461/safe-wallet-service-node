@@ -27,9 +27,10 @@ const ABI = {
 
 
 const SIGN_STATUS = {
+    LOCAL_SIGNED: 'local-signed',
     NOT_AV: 'unknown/not available',
-    PROPOSED: 'just only proposed',
-    UNDER_SIGNING: 'being multi signed',
+    PROPOSED: 'proposed',
+    UNDER_SIGNING: 'being-multi-signed',
     COMPLETED: 'completed',
 }
 
