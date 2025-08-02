@@ -33,9 +33,12 @@ const SIGN_STATUS = {
     COMPLETED: 'completed',
 }
 
+const DEFAULT_SIGN_SEPARATOR = '__';
+
 
 module.exports = {
     ABI,
     ADDR,
     SIGN_STATUS,
+    DEFAULT_SIGN_SEPARATOR,
 }

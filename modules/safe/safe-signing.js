@@ -1,7 +1,7 @@
 const Safe = require('@safe-global/protocol-kit').default;
 const { createWalletClient, http, fallback } = require("viem");
 const { hardhat } = require("viem/chains");
-const { ADDR, ABI, SIGN_STATUS } = require('./constants');
+const { ADDR, ABI, SIGN_STATUS, DEFAULT_SIGN_SEPARATOR } = require('./constants');
 const { Wallet } = require('ethers');
 const { CustomEvent } = require('../custom-events/setup');
 const { EventType } = require('../custom-events/constants');
@@ -174,7 +174,7 @@ class SafeSign {
     }
 
     // will be called eventually by frontend after multisig is completed
-    getSignaturesJoined(txnHash, sep='__') {
+    getSignaturesJoined(txnHash, sep=DEFAULT_SIGN_SEPARATOR) {
         if(this.hasAchievedThreshold(txnHash)) {
             const rmtSigList = this.signatureMapRemote.get(txnHash);
             const lclSig = this.signatureMapLocal.get(txnHash);

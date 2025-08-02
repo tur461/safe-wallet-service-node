@@ -2,6 +2,7 @@ const RPC = require('@hyperswarm/rpc');
 const {CustomEvent} = require('../custom-events/setup.js');
 const { EventType } = require('../custom-events/constants.js');
 const { RPC_POINTS } = require('./constants.js');
+const { DEFAULT_SIGN_SEPARATOR } = require('../safe/constants.js');
 
 
 class RpcServer {
@@ -63,7 +64,7 @@ class RpcServer {
                 const data = JSON.parse(req.toString())
                 console.log('sign_status data parsed:', data);
         
-                const sigsStr = this.safe.getSignaturesJoined(data.txnHash);
+                const sigsStr = this.safe.getSignaturesJoined(data.txnHash, data.sep || DEFAULT_SIGN_SEPARATOR);
                 
                 return Buffer.from(sigsStr);
             } catch {}
