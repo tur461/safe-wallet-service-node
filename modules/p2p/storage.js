@@ -32,6 +32,7 @@ class Storage {
 
         // Local DB for writing
         this.db = new Hyperbee(this.ownFeed, {
+            live: true,
             keyEncoding: 'utf-8',
             valueEncoding: 'json'
         });
@@ -43,6 +44,7 @@ class Storage {
             this.remoteFeed.download();
 
             this.remoteDB = new Hyperbee(this.remoteFeed, {
+                live: true,
                 keyEncoding: 'utf-8',
                 valueEncoding: 'json'
             });
@@ -65,6 +67,10 @@ class Storage {
         this.stream.on(STORE_EVENT_TYPE.DATA, (data) => {
             // console.log('[DBStream] New data');
             // listened in swarm-helper.js
+
+            // handle old
+            // ..to be ctd..
+            
             CustomEvent.emit(EventType.STREAM, data);
         });
 

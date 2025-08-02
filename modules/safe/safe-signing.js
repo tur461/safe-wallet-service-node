@@ -1,8 +1,4 @@
-const Safe = require('@safe-global/protocol-kit').default;
-const { createWalletClient, http, fallback } = require("viem");
-const { hardhat } = require("viem/chains");
-const { ADDR, ABI, SIGN_STATUS, DEFAULT_SIGN_SEPARATOR } = require('./constants');
-const { Wallet } = require('ethers');
+const { SIGN_STATUS, DEFAULT_SIGN_SEPARATOR } = require('./constants');
 const { CustomEvent } = require('../custom-events/setup');
 const { EventType } = require('../custom-events/constants');
 const { DATA_TYPE } = require('../p2p/constants');
@@ -189,55 +185,14 @@ class SafeSign {
     // will be called eventually by frontend after multisig is completed
     getSignaturesJoined(txnHash, sep=DEFAULT_SIGN_SEPARATOR) {
         if(this.hasAchievedThreshold(txnHash)) {
-            const rmtSigList = Array.from(this.signatureMapRemote.get(txnHash)).map(sigO => sigO.signature);
-            const lclSig = this.signatureMapLocal.get(txnHash);
+            const rmtSigList = (this.signatureMapRemote.get(txnHash) || []).map(sigO => sigO.signature);
+            const lclSig = this.signatureMapLocal.get(txnHash) || '';
             
             return [...rmtSigList, lclSig].join(sep);
         }
         console.log('no signatures for txnHash:', txnHash);
         return '';
     }
-
-    // this will be removed here and will happen on frontend
-    executeTxn() {
-
-    }
 }
 
 module.exports = SafeSign;
-
-
-// this will be initialized at frontend
-// const safeSdk = await Safe.init({
-//             signer: signerCumProvider,
-//             provider: this.providerUrl,
-    
-//             safeAddress: ADDR.PROXY_SAFE,
-        
-//             contractNetworks: {
-//                 [chainId]: {
-//                     // addresses
-//                     multiSendAddress: ADDR.MULTI_SEND,
-//                     createCallAddress: ADDR.CREATE_CALL,
-//                     safeSingletonAddress: ADDR.SAFE_SINGLETON,
-//                     signMessageLibAddress: ADDR.SIGN_MESSAGE_LIB,
-//                     fallbackHandlerAddress: ADDR.FALLBACK_HANDLER,
-//                     safeProxyFactoryAddress: ADDR.SAFE_PROXY_FACTORY,
-//                     multiSendCallOnlyAddress: ADDR.MULTI_SEND_CALL_ONLY,
-//                     simulateTxAccessorAddress: ADDR.SIMULATE_TX_ACCESSOR,
-//                     safeWebAuthnSharedSignerAddress: ADDR.SAFE_WEB_AUTHN_SHARED_SIGNER,
-//                     safeWebAuthnSignerFactoryAddress: ADDR.SAFE_WEB_AUTHN_SIGNER_FACTORY,
-//                     // Abis
-//                     multiSendAbi: ABI.MULTI_SEND,
-//                     createCallAbi: ABI.CREATE_CALL,
-//                     safeSingletonAbi: ABI.SAFE_SINGLETON,
-//                     signMessageLibAbi: ABI.SIGN_MESSAGE_LIB,
-//                     fallbackHandlerAbi: ABI.FALLBACK_HANDLER,
-//                     safeProxyFactoryAbi: ABI.SAFE_PROXY_FACTORY,
-//                     multiSendCallOnlyAbi: ABI.MULTI_SEND_CALL_ONLY,
-//                     simulateTxAccessorAbi: ABI.SIMULATE_TX_ACCESSOR,
-//                     safeWebAuthnSharedSignerAbi: ABI.SAFE_WEB_AUTHN_SHARED_SIGNER,
-//                     safeWebAuthnSignerFactoryAbi: ABI.SAFE_WEB_AUTHN_SIGNER_FACTORY,
-//                 }
-//             }
-//         });
