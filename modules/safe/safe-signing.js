@@ -57,13 +57,27 @@ class SafeSign {
         return this.signatureMapLocal.has(txnHash);
     }
 
+    hasSignatureRemote_searchByNodeId(txnHash, nodeId) {
+        const sigList = this.signatureMapRemote.get(txnHash) || [];
+        return sigList.some(sig => sig.node_id === nodeId);
+    }
+
     async handleSigningFromRemoteFeeder(txData) {
-        console.log('[handleSigningFromRemoteFeeder] data:', txData);
+        console.log('[handleSigningFromRemoteFeeder] data key:', txData.key, 'node_id:',txData.value.node_id);
         // check if we have already signed the txnHash
         if(this.hasSignedLocal(txData.key)) {
             console.log('this node has already signed the txn:', txData.key);
+            // because the feeder feeds old data as well,
+            // we need to check if we have already added
+            // the incoming data by checking if signatureMapRemote has it
+            const nodeId = txData.value.node_id;
+            if(this.hasSignatureRemote_searchByNodeId(txData.key, nodeId)) {
+                console.log('this node has already added the remote signature from node_id:', nodeId);
+
+                return;
+            }
             // add the incoming to signatureMapRemote
-            this.addSignatureRemote(txData.value.signature, txData.key);
+            this.addSignatureRemote(txData.value, txData.key);
             this.incSignCountFor(txData.key);
         } else {
             // if not then lets sign it
@@ -126,11 +140,11 @@ class SafeSign {
         if(this.signatureMapLocal.has(txnHash)) return;
         this.signatureMapLocal.set(txnHash, sig);
     }
-    addSignatureRemote(sig, txnHash) {
+    addSignatureRemote(sigObj, txnHash) {
         console.log('[addSignatureRemote]');
 
         const sigList = this.signatureMapRemote.has(txnHash) ? Array.from(this.signatureMapRemote.get(txnHash)) : [];
-        sigList.push(sig);
+        sigList.push({...sigObj});
         this.signatureMapRemote.set(txnHash, [...sigList]);
     }
 
@@ -179,7 +193,7 @@ class SafeSign {
     // will be called eventually by frontend after multisig is completed
     getSignaturesJoined(txnHash, sep=DEFAULT_SIGN_SEPARATOR) {
         if(this.hasAchievedThreshold(txnHash)) {
-            const rmtSigList = this.signatureMapRemote.get(txnHash);
+            const rmtSigList = Array.from(this.signatureMapRemote.get(txnHash)).map(sigO => sigO.signature);
             const lclSig = this.signatureMapLocal.get(txnHash);
             
             return [...rmtSigList, lclSig].join(sep);

@@ -52,9 +52,9 @@ class Storage {
             this.remoteFeed.on(STORE_EVENT_TYPE.CONNECT, () => console.log('Connected to a peer for remote feed'));
             
             this.remoteFeed.on(STORE_EVENT_TYPE.DOWNLOAD, (index) => {
-                console.log('[remoteFeed] Download detected, starting live read stream');
+                // console.log('[remoteFeed] Download detected, starting live read stream');
                 this.setupDBStream(this.remoteDB);
-                console.log('Downloaded block:', index)
+                // console.log('Downloaded block:', index)
             });
         }
     }
@@ -63,7 +63,7 @@ class Storage {
         this.stream = dbInstance.createReadStream(null, { live: true });
         
         this.stream.on(STORE_EVENT_TYPE.DATA, (data) => {
-            console.log('[DBStream] New data:', data.key, data.value);
+            console.log('[DBStream] New data');
             // listened in swarm-helper.js
             CustomEvent.emit(EventType.STREAM, data);
         });
