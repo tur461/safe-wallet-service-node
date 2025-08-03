@@ -23,7 +23,8 @@ class SafeSign {
         this.signatureMapRemote = new Map();
         this.txnUnderSigningMap = new Map();
         this.thresholdAchievedMap = new Map();
-        this.currentlySigningMap = new Map();
+        this.currentlySigningLocalMap = new Map();
+        this.currentlySigningRemoteMap = new Map();
 
         this.listenEvents();
     }
@@ -37,7 +38,7 @@ class SafeSign {
         if(!this.hasAchievedThreshold(txnHash)) {
             this.addProposal(txData, txnHash)
             await this.signTxn(txData);
-            this.incSignCountFor(txnHash);
+            
         } else {
             
             // event not handled anywhere
@@ -60,28 +61,30 @@ class SafeSign {
     }
 
     async handleSigningFromRemoteFeeder(txData) {
+        const txnHash = txData.key;
+        
+        // here we need to check if this function is called multiple
+        // times at the same time (because of multiple Event triggered simultaneously)
+        if(this.isCurrentlySigningRemote(txnHash)) return;
+        this.setCurrentlySigningRemote(txnHash);
+
         // check if we have already signed the txnHash
-        if(this.hasSignedLocal(txData.key)) {
-            console.log('Already local signed:', txData.key);
-            // because the feeder feeds old data as well,
-            // we need to check if we have already added
-            // the incoming data by checking if signatureMapRemote has it
-            const nodeId = txData.value.node_id;
-            if(this.hasSignatureRemote_searchByNodeId(txData.key, nodeId)) {
-                console.log('Returning!: already remote added:', txData.key);
-                return;
-            }
-            // add the incoming to signatureMapRemote
-            this.addSignatureRemote(txData.value, txData.key);
-            this.incSignCountFor(txData.key);
-        } else {
-            console.log('Local signing..: not local signed:', txData.key);
+        if(!this.hasSignedLocal(txnHash)) {
+            console.log('Local signing..: not local signed:', txnHash);
             // if not then lets sign it
             await this.handleProposed({
-                txnHash: txData.key,
+                txnHash: txnHash,
                 data: txData.value.data
             });
         }
+
+        const nodeId = txData.value.node_id;
+        if(this.hasSignatureRemote_searchByNodeId(txnHash, nodeId)) {
+            console.log('Returning!: already remote added:', txnHash);
+            return;
+        }
+        // add the incoming to signatureMapRemote
+        this.addSignatureRemote(txData.value, txnHash);
     }
 
     listenEvents() {
@@ -135,32 +138,42 @@ class SafeSign {
     // maybe coming from other nodes
     addSignatureLocal(sig, txnHash) {
         if(this.signatureMapLocal.has(txnHash)) return;
+        this.incSignCountFor(txnHash);
         this.signatureMapLocal.set(txnHash, sig);
     }
     addSignatureRemote(sigObj, txnHash) {
-
         const sigList = this.signatureMapRemote.has(txnHash) ? Array.from(this.signatureMapRemote.get(txnHash)) : [];
         sigList.push({...sigObj});
         this.signatureMapRemote.set(txnHash, [...sigList]);
+        this.incSignCountFor(txnHash);
     }
 
     async storeInHyperDb(key, value) {
         await this.db.put(key, value);
     }
 
-    isCurrentlySigning(txnHash) {
-        return this.currentlySigningMap.has(txnHash);
+    isCurrentlySigningLocal(txnHash) {
+        return this.currentlySigningLocalMap.has(txnHash);
     }
 
-    setCurrentlySigning(txnHash) {
-        this.currentlySigningMap.set(txnHash, true);
+    setCurrentlySigningLocal(txnHash) {
+        this.currentlySigningLocalMap.set(txnHash, true);
+    }
+
+    isCurrentlySigningRemote(txnHash) {
+        return this.currentlySigningRemoteMap.has(txnHash);
+    }
+
+    setCurrentlySigningRemote(txnHash) {
+        this.currentlySigningRemoteMap.set(txnHash, true);
     }
 
     async signTxn(txnData) {
         const txnHash = txnData.txnHash;
-
-        if(this.isCurrentlySigning(txnHash)) return;
-        this.setCurrentlySigning(txnHash);
+        // here we need to check if this function is called multiple
+        // times at the same time (because of multiple Event triggered simultaneously)
+        if(this.isCurrentlySigningLocal(txnHash)) return;
+        this.setCurrentlySigningLocal(txnHash);
         // to hex
         // const hexData = Buffer.from(txnData.data).toString('hex');
         // add logic to start the signing process
