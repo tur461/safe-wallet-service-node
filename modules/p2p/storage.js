@@ -1,3 +1,4 @@
+const utils = require('./utils.js');
 const Corestore = require('corestore');
 const Hyperbee = require('hyperbee');
 const { CustomEvent } = require('../custom-events/setup.js');
@@ -14,11 +15,13 @@ class Storage {
         this.remoteCoreFeedPubKey = key; // remote feed public key
         this.coreStorePath = path;
         this.remoteDB = null;
+        this.maxSeqNum = 0;
     }
 
     async setup() {
         this.store = new Corestore(this.coreStorePath);
         await this.store.ready();
+        // this.maxSeqNum = utils.getPersistedMaxSeqNum(this.coreStorePath);
 
         this.store.on(STORE_EVENT_TYPE.FEED, (feed) => {
             console.log('Replicating feed:', feed.key.toString('hex'));
@@ -55,14 +58,14 @@ class Storage {
             
             this.remoteFeed.on(STORE_EVENT_TYPE.DOWNLOAD, (index) => {
                 // console.log('[remoteFeed] Download detected, starting live read stream');
-                this.setupDBStream(this.remoteDB);
+                this.setupDBStream(this.remoteDB, index);
                 // console.log('Downloaded block:', index)
             });
         }
     }
 
-    setupDBStream(dbInstance) {
-        this.stream = dbInstance.createReadStream(null, { live: true });
+    setupDBStream(dbInstance, index) {
+        this.stream = dbInstance.createHistoryStream({ reverse: true, limit: 1 });
         
         this.stream.on(STORE_EVENT_TYPE.DATA, (data) => {
             // console.log('[DBStream] New data');
@@ -70,8 +73,15 @@ class Storage {
 
             // handle old
             // ..to be ctd..
-            
+            console.log('Handling new data at index:', index, data)
             CustomEvent.emit(EventType.STREAM, data);
+            // if(index > this.maxSeqNum) {
+            //     this.maxSeqNum = index;
+            //     utils.persistMaxSeqNum(this.coreStorePath, index);
+            // } else {
+            //     console.log('Ignoring old data at index:', index)
+            // }
+
         });
 
     }

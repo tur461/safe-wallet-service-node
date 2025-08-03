@@ -23,6 +23,7 @@ class SafeSign {
         this.signatureMapRemote = new Map();
         this.txnUnderSigningMap = new Map();
         this.thresholdAchievedMap = new Map();
+        this.currentlySigningMap = new Map();
 
         this.listenEvents();
     }
@@ -61,18 +62,20 @@ class SafeSign {
     async handleSigningFromRemoteFeeder(txData) {
         // check if we have already signed the txnHash
         if(this.hasSignedLocal(txData.key)) {
+            console.log('Already local signed:', txData.key);
             // because the feeder feeds old data as well,
             // we need to check if we have already added
             // the incoming data by checking if signatureMapRemote has it
             const nodeId = txData.value.node_id;
             if(this.hasSignatureRemote_searchByNodeId(txData.key, nodeId)) {
-
+                console.log('Returning!: already remote added:', txData.key);
                 return;
             }
             // add the incoming to signatureMapRemote
             this.addSignatureRemote(txData.value, txData.key);
             this.incSignCountFor(txData.key);
         } else {
+            console.log('Local signing..: not local signed:', txData.key);
             // if not then lets sign it
             await this.handleProposed({
                 txnHash: txData.key,
@@ -145,21 +148,33 @@ class SafeSign {
         await this.db.put(key, value);
     }
 
+    isCurrentlySigning(txnHash) {
+        return this.currentlySigningMap.has(txnHash);
+    }
+
+    setCurrentlySigning(txnHash) {
+        this.currentlySigningMap.set(txnHash, true);
+    }
+
     async signTxn(txnData) {
         const txnHash = txnData.txnHash;
+
+        if(this.isCurrentlySigning(txnHash)) return;
+        this.setCurrentlySigning(txnHash);
         // to hex
         // const hexData = Buffer.from(txnData.data).toString('hex');
         // add logic to start the signing process
         const signature = await this.signViaEnclave(txnHash);
+
+        
+        this.addSignatureLocal(signature, txnHash);
+        this.signingStatusMap.set(txnHash, SIGN_STATUS.LOCAL_SIGNED);
 
         await this.storeInHyperDb(txnHash, {
             signature,
             node_id: this.node_id,
             type: DATA_TYPE.SIGNATURE,
         });
-
-        this.addSignatureLocal(signature, txnHash);
-        this.signingStatusMap.set(txnHash, SIGN_STATUS.LOCAL_SIGNED);
     }
 
     addProposal(txn, txnHash) {
