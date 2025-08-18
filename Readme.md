@@ -8,12 +8,14 @@ This service provides decentralized, peer-to-peer, and secure wallet operations 
 ## Overview
 
 The **Safe Wallet Service Node** allows for:
+
 - Decentralized peer-to-peer networking
 - A dedicated RPC server for wallet operations
 - A distributed key-value database built with Hypercore (corestore) stack
 - Future-ready Gnosis Safe integration for multisig wallet management
 
 This repository also includes:
+
 - **RPC Client Program** – to test and interact with the wallet service node.
 - **Hardhat Project** – for deploying and testing Gnosis Safe smart contracts locally.
 
@@ -22,6 +24,7 @@ This repository also includes:
 ## Features
 
 ### Completed
+
 - **Swarm Networking**  
   Built with [Hyperswarm](https://github.com/holepunchto/hyperswarm) for peer discovery and secure communication.
   
@@ -31,9 +34,6 @@ This repository also includes:
 - **Decentralized Database**  
   Leveraging **Hypercore**, **Autobase**, and **Hyperbee** for a resilient, append-only, and replicated data layer.
 
----
-
-### Pending
 - **Gnosis Safe SDK Integration**  
   Full integration for managing and interacting with Gnosis Safe contracts.
   
@@ -55,8 +55,10 @@ This repository also includes:
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v18+ recommended)
 - npm or yarn
 - Hardhat for contract deployment  
+
   ```bash
   npm install --save-dev hardhat
